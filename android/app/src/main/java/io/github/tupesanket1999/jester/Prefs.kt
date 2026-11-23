@@ -161,6 +161,32 @@ class Prefs(ctx: Context) {
         get() = plain.getString("aiProvider", "") ?: ""
         set(v) = plain.edit().putString("aiProvider", v).apply()
 
+    // ---- in-app updates (logic/Updates.kt) ----
+
+    /** "Check for updates automatically": at most once a day. Off = only the manual button checks. */
+    var autoUpdateCheck: Boolean
+        get() = plain.getBoolean("autoUpdateCheck", true)
+        set(v) = plain.edit().putBoolean("autoUpdateCheck", v).apply()
+
+    var lastUpdateCheck: Long
+        get() = plain.getLong("lastUpdateCheck", 0)
+        set(v) = plain.edit().putLong("lastUpdateCheck", v).apply()
+
+    /** Tag the user chose to skip ("android-v0.5.0"); a newer tag shows again. */
+    var skippedUpdate: String
+        get() = plain.getString("skippedUpdate", "") ?: ""
+        set(v) = plain.edit().putString("skippedUpdate", v).apply()
+
+    /** Tag already announced by notification, so one release is announced once. */
+    var notifiedUpdate: String
+        get() = plain.getString("notifiedUpdate", "") ?: ""
+        set(v) = plain.edit().putString("notifiedUpdate", v).apply()
+
+    /** Latest newer release found (Updates.toJson), shown by UpdateActivity. */
+    var pendingUpdate: String
+        get() = plain.getString("pendingUpdate", "") ?: ""
+        set(v) = plain.edit().putString("pendingUpdate", v).apply()
+
     /** Effective outfit right now (auto picks by hour). */
     fun currentTheme(hour: Int): String = if (autoTheme) Looks.auto(hour) else theme
 }

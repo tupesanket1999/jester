@@ -51,6 +51,8 @@ tells you, with a pose and a little sound, exactly when you're needed. Click him
 - **Share to Jester.** Share text or a screenshot; on-device text recognition turns it into an item.
 - **Outfits and moods.** Themes, an automatic outfit by time of day, quiet hours, sound and voice settings.
 - **Works offline.** Exact alarms for cached reminders, and an offline write queue when a hub is connected.
+- **Updates itself.** A notification when a new version is out; one tap downloads it, checks its checksum and
+  hands it to Android's installer.
 
 ### Both
 - **A real animated character, not a GIF.** IK limbs, spring physics on the hat tails, juggling, backflips,
@@ -98,7 +100,8 @@ apps with a system overlay.
 No. The hook keeps a small state file per session on your Mac (`~/.cache/jester`): event, tool name, project folder,
 a short snippet of your last prompts and Claude's last reply. Nothing leaves your machine except the optional "resume"
 summary, which runs through your own local `claude` CLI under your own account, and a hub only if you configure one.
-There's no telemetry.
+There's no telemetry. The Android app checks GitHub Releases for a new version about once a day (a plain request to
+`api.github.com`, nothing about you is sent); you can turn that off on the Me screen.
 
 **Will it slow my machine down?**
 On Mac he draws from pre-rendered sprite cutouts, so it's light. On Android he uses about a third of one CPU core

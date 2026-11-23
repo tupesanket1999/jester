@@ -5,6 +5,7 @@ import io.github.tupesanket1999.jester.notify.Notifier
 import io.github.tupesanket1999.jester.ocr.Ocr
 import io.github.tupesanket1999.jester.reminders.Alarms
 import io.github.tupesanket1999.jester.service.RobotService
+import io.github.tupesanket1999.jester.update.Updater
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -119,6 +120,7 @@ class MainActivity : ComponentActivity() {
         val app = JesterApp.get(this)
         app.lookVersion.value++ // auto outfit may have changed with the hour
         if (app.prefs.setupDone) RobotService.start(this, RobotService.ACTION_SYNC)
+        Updater.autoCheck(app)
     }
 
     private fun toast(s: String) = Toast.makeText(applicationContext, s, Toast.LENGTH_SHORT).show()

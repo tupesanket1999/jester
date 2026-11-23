@@ -8,6 +8,7 @@ import io.github.tupesanket1999.jester.overlay.Overlay
 import io.github.tupesanket1999.jester.push.NtfyStream
 import io.github.tupesanket1999.jester.reminders.Alarms
 import io.github.tupesanket1999.jester.ui.SheetActivity
+import io.github.tupesanket1999.jester.update.Updater
 import io.github.tupesanket1999.jester.ui.VoiceActivity
 import android.content.IntentFilter
 import android.app.Service
@@ -62,6 +63,7 @@ class RobotService : Service() {
         scope.launch { app.botVersion.collectLatest { if (it > 0) overlay?.setPack(BotRepo.load(this@RobotService)) } }
         scope.launch(Dispatchers.IO) { ntfy.run() }
         scope.launch(Dispatchers.IO) { syncLoop() }
+        Updater.autoCheck(app) // at most once a day, silent on failure
     }
 
     private val QUIPS = listOf(
@@ -127,7 +129,7 @@ class RobotService : Service() {
             ACTION_HIDE_HOUR -> { app.prefs.hiddenUntil = System.currentTimeMillis() + 3600_000L; applyHidden(); refreshNotification() }
             ACTION_SYNC -> app.scope.launchCatching({}) { app.refreshStatus(); app.refreshRinging(); app.refreshTasks(); app.drainNow() }
             ACTION_APPLY_FX -> overlay?.applySettings()
-            ACTION_SETTINGS_CHANGED -> { ntfy.stop(); overlay?.attach(); applyHidden() }
+            ACTION_SETTINGS_CHANGED -> { ntfy.stop(); overlay?.attach(); applyHidden(); Updater.autoCheck(app) }
         }
         return START_STICKY
     }

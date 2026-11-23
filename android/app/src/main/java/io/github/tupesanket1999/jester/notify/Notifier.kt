@@ -5,10 +5,12 @@ import io.github.tupesanket1999.jester.JesterApp
 import io.github.tupesanket1999.jester.logic.NotifText
 import io.github.tupesanket1999.jester.logic.ReplyAction
 import io.github.tupesanket1999.jester.logic.ReplyParser
+import io.github.tupesanket1999.jester.logic.Updates
 import io.github.tupesanket1999.jester.service.RobotService
 import io.github.tupesanket1999.jester.ui.AlarmActivity
 import io.github.tupesanket1999.jester.ui.MainActivity
 import io.github.tupesanket1999.jester.ui.SheetActivity
+import io.github.tupesanket1999.jester.ui.UpdateActivity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -28,14 +30,16 @@ import java.time.ZoneId
 
 /**
  * Notification channels: a silent MIN channel for the always-on service, HIGH for reminders (these are what a watch
- * mirroring app forwards to the watch), DEFAULT for info (hub nudges, chat replies).
+ * mirroring app forwards to the watch), DEFAULT for info (hub nudges, chat replies), LOW for "update available".
  * Reminder copy is watch-friendly: plain text, no emoji ("URGENT: x", "now · 1:52 PM · 3rd ping").
  */
 object Notifier {
     const val CH_SERVICE = "robot"
     const val CH_REMINDERS = "reminders"
     const val CH_INFO = "info"
+    const val CH_UPDATES = "updates"
     const val SERVICE_ID = 1
+    private const val UPDATE_ID = 3
     const val KEY_REPLY = "jester_reply"
     val QUICK_REPLIES = arrayOf<CharSequence>("Done", "30 min", "Tonight")
 
@@ -51,6 +55,10 @@ object Notifier {
         })
         nm.createNotificationChannel(NotificationChannel(CH_INFO, "Messages", NotificationManager.IMPORTANCE_DEFAULT).apply {
             description = "Hub nudges (counts only) and Jester's chat replies."
+        })
+        nm.createNotificationChannel(NotificationChannel(CH_UPDATES, "App updates", NotificationManager.IMPORTANCE_LOW).apply {
+            description = "Tells you when a new version of Jester is available. Silent."
+            setShowBadge(false)
         })
     }
 
@@ -126,6 +134,20 @@ object Notifier {
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setAutoCancel(true).setContentIntent(open).build())
     }
+
+    /** "Jester x.y.z is available": tap opens the update sheet. One per release (the caller remembers the tag). */
+    fun updateAvailable(ctx: Context, r: Updates.Release) {
+        val open = pi(ctx, 30, UpdateActivity.intent(ctx), activity = true)
+        post(ctx, UPDATE_ID, NotificationCompat.Builder(ctx, CH_UPDATES)
+            .setSmallIcon(R.drawable.ic_stat_robot)
+            .setContentTitle("Jester ${r.version} is available")
+            .setContentText("Tap to see what's new and update.")
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setAutoCancel(true).setContentIntent(open).build())
+    }
+
+    fun cancelUpdate(ctx: Context) = NotificationManagerCompat.from(ctx).cancel(UPDATE_ID)
 
     private fun post(ctx: Context, id: Int, n: Notification) {
         try { NotificationManagerCompat.from(ctx).notify(id, n) } catch (e: SecurityException) { /* notification permission not granted yet */ }

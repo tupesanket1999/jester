@@ -22,6 +22,7 @@ is in `app/src/main/assets/bots/pixel/`.
 | Own notifications with Done / Snooze 15m, high importance so a watch mirroring app forwards them | `notify/` |
 | Offline backup: exact alarms for the next 24 h of cached reminders, never double-shown | `reminders/` |
 | Offline write queue: writes are stored first and sent later; hub rejections are kept, never deleted | `queue/` |
+| Updates: checks GitHub once a day, "Update" downloads, verifies and installs (see below) | `update/`, `logic/Updates.kt`, `ui/UpdateActivity.kt` |
 | Device token and ntfy topic in EncryptedSharedPreferences (Android Keystore); never logged, no backups | `Prefs.kt` |
 
 With no hub configured the app still runs: the floating jester, outfits, sound, voice and the setup flow all work.
@@ -70,6 +71,17 @@ JESTER_KEY_PASSWORD=...
    the same topic, mute it so the watch does not buzz twice.
 7. Press **Start Jester**.
 
+## Updates
+
+| | |
+|---|---|
+| What it checks | The public GitHub releases list of `tupesanket1999/jester` for the newest `android-vX.Y.Z` release with a `jester-android-*.apk` asset (prereleases count, drafts do not). Nothing about you is sent. |
+| When | At most once a day, when Jester starts or you open the app. **Me -> Updates -> Check for updates** always checks now. |
+| Turn it off | **Me -> Updates -> Check for updates automatically**. Off means only the manual button checks. Automatic checks fail silently when offline. |
+| If there is one | A quiet notification "Jester x.y.z is available" opens a sheet with what's new, the size and **Update / Later / Skip this version** (a newer release shows again). |
+| Installing | Jester asks you to allow "install unknown apps" for itself (once), downloads the APK, checks its size and SHA-256 (when GitHub provides one; a mismatch is deleted, never installed), then Android shows its own install confirmation. |
+| Signature | Android only installs an update signed with the same key as the installed Jester. A build signed with a different key (for example a debug build over a release one) is refused. |
+
 ## Hooks and the hub
 
 Claude Code hooks drive the Mac mascot, not this app. The phone app only talks to a hub you run. See
@@ -82,4 +94,4 @@ The app has no call that can start work on your computer.
 - "Hide" keeps push, alarms and the queue running; show Jester again from the notification or Settings.
 - Auto-hide in full-screen apps is best effort (a 1-px invisible overlay watches the status bar).
 - The hub base URL must be https (cleartext is blocked).
-- Not built yet: self-update, local re-nag while offline (the hub escalates when online).
+- Not built yet: local re-nag while offline (the hub escalates when online).
