@@ -8,7 +8,7 @@ let env = ProcessInfo.processInfo.environment
 if env["JESTER_CHILD"] != nil { exit(0) }  // the mascot's own summarizer runs
 
 let fm = FileManager.default
-let home = fm.homeDirectoryForCurrentUser.path
+let home = env["HOME"].flatMap { $0.isEmpty ? nil : $0 } ?? fm.homeDirectoryForCurrentUser.path
 let base = home + "/.cache/jester"
 let sessionsDir = base + "/sessions"
 if fm.fileExists(atPath: base + "/disabled") { exit(0) }
