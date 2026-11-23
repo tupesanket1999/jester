@@ -8,7 +8,7 @@ import android.view.View
 
 /**
  * Hosts a [JesterRig]: steps it with real time every frame, draws it, and paces invalidation
- * (maxFps when something fast is on screen, 60 when calm, ~20 asleep). Stops when hidden or detached.
+ * (maxFps when something fast is on screen, 20 when calm, 15 asleep; eco: 30 / 12 / 8). Stops when hidden or detached.
  */
 class JesterView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private val rig = JesterRig(0.0)
@@ -31,6 +31,8 @@ class JesterView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         set(v) { field = v; rig.request(state, v) }
     /** 60 or 120 */
     var maxFps: Int = 60
+    /** Eco mode: lower frame rates everywhere to save battery. */
+    var eco: Boolean = false
     var onSound: ((String) -> Unit)?
         get() = rig.onSound
         set(v) { rig.onSound = v }
@@ -89,9 +91,14 @@ class JesterView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
     }
 
-    // phone battery: 30 fps when calm (breathing/sway reads fine), maxFps only for fast moves, 15 asleep
-    private fun fps(): Int =
-        if (rig.key == "sleep") 15 else if (rig.wantsHighFPS) maxFps else minOf(30, maxFps)
+    // Phone battery: CPU is dominated by per-frame draw overhead (~45 bitmap draws), so it scales with fps.
+    // Calm breathing/sway reads fine at 20; maxFps only for fast moves (flips, juggling); asleep barely moves.
+    // Eco mode: 30 for fast moves, 12 calm, 8 asleep.
+    private fun fps(): Int = when {
+        rig.key == "sleep" -> if (eco) 8 else 15
+        rig.wantsHighFPS -> if (eco) minOf(30, maxFps) else maxFps
+        else -> if (eco) 12 else 20
+    }
 
     private fun start() {
         if (running) return

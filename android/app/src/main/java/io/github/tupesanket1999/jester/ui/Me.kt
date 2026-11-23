@@ -152,6 +152,11 @@ fun MeScreen(app: JesterApp, onNav: (String) -> Unit) {
                         p.sfxVolume = steps.firstOrNull { it > p.sfxVolume + 0.01f } ?: steps.first(); bump()
                     }
                     HorizontalDivider(color = j.hair)
+                    SwitchRow("Eco mode", "Lower frame rate to save battery. Motion is a little less smooth", p.eco) {
+                        p.eco = it; bump()
+                        RobotService.start(ctx, RobotService.ACTION_APPLY_FX)
+                    }
+                    HorizontalDivider(color = j.hair)
                     ValueRow("Max frame rate", "${p.maxFps} fps") {
                         p.maxFps = if (p.maxFps >= 120) 60 else 120; bump()
                         RobotService.start(ctx, RobotService.ACTION_APPLY_FX)
