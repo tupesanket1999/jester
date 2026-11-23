@@ -9,7 +9,8 @@
 He thinks while Claude thinks, types while it edits, waves when it needs your OK, and backflips when the job is done,
 so you can go get coffee and still know the moment to come back.
 
-[![Release](https://img.shields.io/github/v/release/tupesanket1999/jester?include_prereleases&label=android&color=d6453d)](https://github.com/tupesanket1999/jester/releases)
+[![Mac](https://img.shields.io/github/v/release/tupesanket1999/jester?include_prereleases&filter=mac-*&label=mac&color=d6453d)](https://github.com/tupesanket1999/jester/releases?q=mac)
+[![Android](https://img.shields.io/github/v/release/tupesanket1999/jester?include_prereleases&filter=android-*&label=android&color=3ddc84)](https://github.com/tupesanket1999/jester/releases?q=android)
 [![CI](https://github.com/tupesanket1999/jester/actions/workflows/ci.yml/badge.svg)](https://github.com/tupesanket1999/jester/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-e8b04a)](LICENSE)
 ![macOS 13+](https://img.shields.io/badge/macOS-13%2B-555)
