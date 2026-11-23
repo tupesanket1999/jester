@@ -6,7 +6,7 @@ import AVFoundation
 
 // MARK: paths
 let fm = FileManager.default
-let HOME = fm.homeDirectoryForCurrentUser.path
+let HOME = ProcessInfo.processInfo.environment["HOME"].flatMap { $0.isEmpty ? nil : $0 } ?? fm.homeDirectoryForCurrentUser.path
 let CACHE = HOME + "/.cache/jester"
 let SESSIONS = CACHE + "/sessions"
 let PROJECTS = CACHE + "/projects"
