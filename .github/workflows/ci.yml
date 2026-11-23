@@ -7,11 +7,14 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build
         working-directory: mac
+        run: ./build.sh "$RUNNER_TEMP/jester" && test -x "$RUNNER_TEMP/jester/Jester.app/Contents/MacOS/Jester"
+      - name: CLI smoke test
+        working-directory: mac
         run: |
-          mkdir -p out
-          swiftc -O -swift-version 5 app/jester-hook.swift -o out/jester-hook
-          swiftc -O -swift-version 5 app/main.swift app/Jester.swift app/JesterAudio.swift -o out/Jester \
-            -framework AppKit -framework Carbon -framework AVFoundation
+          bash -n jester install.sh build.sh
+          export CLAUDE_CONFIG_DIR="$RUNNER_TEMP/claude" JESTER_HOOK=/usr/local/bin/jester-hook
+          ./jester hooks install && ./jester hooks install | grep -q "nothing to change" && ./jester hooks status | grep -q "8/8"
+          ./jester hooks uninstall && ./jester hooks status | grep -q "0/8"
   android:
     runs-on: ubuntu-latest
     steps:
