@@ -131,6 +131,11 @@ class Prefs(ctx: Context) {
         get() = plain.getFloat("sfxVolume", 0.35f)
         set(v) = plain.edit().putFloat("sfxVolume", v).apply()
 
+    /** Eco mode: lower frame rates to save battery. */
+    var eco: Boolean
+        get() = plain.getBoolean("eco", false)
+        set(v) = plain.edit().putBoolean("eco", v).apply()
+
     /** 60 or 120 */
     var maxFps: Int
         get() = if (plain.getInt("maxFps", 60) >= 120) 120 else 60

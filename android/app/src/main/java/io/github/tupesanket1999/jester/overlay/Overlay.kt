@@ -98,6 +98,7 @@ class Overlay(
                 }
             }
             it.maxFps = prefs.maxFps
+            it.eco = prefs.eco
         } else RobotView(ctx, p).also { robot = it }
     }
 
@@ -122,7 +123,7 @@ class Overlay(
     }
 
     /** Re-read settings that can change while running (frame cap). */
-    fun applySettings() { jester?.maxFps = prefs.maxFps }
+    fun applySettings() { jester?.maxFps = prefs.maxFps; jester?.eco = prefs.eco }
 
     fun release() { mainHandler.removeCallbacksAndMessages(null); audio.release() }
 
