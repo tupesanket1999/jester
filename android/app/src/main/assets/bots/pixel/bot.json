@@ -1,0 +1,43 @@
+{
+  "name": "pixel",
+  "parts": "parts.px",
+  "scale": 4,
+  "fps": 6,
+  "bob": 2.0,
+  "accent": [230, 57, 70],
+  "states": {
+    "idle": [
+      ["body", "eyes_open", "arm_l", "arm_r", "flame_s"],
+      ["body", "eyes_open", "arm_l", "arm_r", "flame_m"],
+      ["body", "eyes_open", "arm_l", "arm_r", "flame_s"],
+      ["body", "eyes_blink", "arm_l", "arm_r", "flame_m"]
+    ],
+    "thinking": [
+      ["body", "tip_on", "eyes_up", "arm_l", "arm_r", "flame_m"],
+      ["body", "eyes_up", "arm_l", "arm_r", "flame_l"]
+    ],
+    "working": [
+      ["body", "tip_on", "eyes_focus", {"layer": "arm_l", "dy": -1}, "arm_r", "flame_l"],
+      ["body", "tip_on", "eyes_focus", "arm_l", {"layer": "arm_r", "dy": -1}, "flame_m"]
+    ],
+    "waiting": [
+      ["body", "tip_on", "eyes_alert", "arm_l", "arm_r_up", "flame_m"],
+      ["body", "eyes_alert", "arm_l", {"layer": "arm_r_up", "dx": 1}, "flame_s"]
+    ],
+    "done": [
+      ["body", "tip_on", "eyes_happy", "arm_l", "arm_r_thumb", "flame_l"],
+      ["body", "tip_on", "eyes_happy", "arm_l", "arm_r_thumb", "flame_m"]
+    ],
+    "error": [
+      ["body", "eyes_x", "arm_l", "arm_r", "sweat"],
+      ["body", "eyes_x", "arm_l", "arm_r", {"layer": "sweat", "dy": 1}]
+    ],
+    "remind": [
+      ["body", "tip_on", "eyes_open", "arm_l", "arm_r_up", "flame_m"],
+      ["body", "eyes_happy", "arm_l", {"layer": "arm_r_up", "dx": 1}, "flame_l"]
+    ],
+    "sleep": [
+      ["body", "eyes_sleep", "arm_l", "arm_r"]
+    ]
+  }
+}

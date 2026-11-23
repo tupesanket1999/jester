@@ -1,0 +1,10 @@
+.DS_Store
+*.keystore
+*.jks
+local.properties
+.gradle/
+.kotlin/
+build/
+android/app/build/
+.idea/
+*.iml

@@ -1,0 +1,71 @@
+#!/bin/bash
+# jester: control the Jester mascot. on|off|status|bot <name>|bots|forget|demo|voice|add|hub
+set -uo pipefail
+LABEL="io.github.tupesanket1999.jester"
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+CACHE="$HOME/.cache/jester"
+CONF="$HOME/.config/jester"
+case "${1:-status}" in
+  add|note)
+    shift; text="$*"; [ -z "$text" ] && { echo 'usage: jester add "buy milk tomorrow 6pm"'; exit 1; }
+    mkdir -p "$CACHE/outbox"; chmod 700 "$CACHE/outbox"
+    python3 -c 'import json,sys,time,os;p=os.path.join(sys.argv[1],"%d-%d.json"%(time.time()*1000,os.getpid()));fd=os.open(p,os.O_WRONLY|os.O_CREAT,0o600);os.write(fd,json.dumps({"kind":"inbox","text":sys.argv[2][:500],"ts":time.time()}).encode());os.close(fd)' "$CACHE/outbox" "$text"
+    [ -f "$CONF/hub.json" ] && echo "📝 queued for Jester (sent within ~10 s): $text" || echo "📝 queued; it will be sent once the hub is set up (jester hub setup <url>)" ;;
+  hub)
+    case "${2:-status}" in
+      setup)
+        url="${3:-}"; [ -z "$url" ] && { echo "usage: jester hub setup https://your-hub.example.com"; exit 1; }
+        mkdir -p "$CONF"; printf '{"url": "%s"}\n' "${url%/}" > "$CONF/hub.json"
+        echo "Paste this Mac's device token at the hidden prompt:"
+        security add-generic-password -U -s jester-hub -a jester -w && echo "✓ token saved in Keychain (service jester-hub)"
+        launchctl kickstart -k "gui/$(id -u)/$LABEL" >/dev/null 2>&1; echo "✓ hub: ${url%/}" ;;
+      status)
+        [ -f "$CONF/hub.json" ] || { echo "hub: not set up (optional: jester hub setup <url>, see docs/HUB_API.md)"; exit 0; }
+        url=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["url"])' "$CONF/hub.json")
+        echo "hub: $url"; security find-generic-password -s jester-hub >/dev/null 2>&1 && echo "token: in Keychain" || echo "token: MISSING"
+        echo "health: $(curl -s -m 5 "$url/health" | head -c 300)"
+        echo "outbox: $(ls "$CACHE/outbox" 2>/dev/null | grep -c '\.json$') waiting, $(ls "$CACHE/outbox/failed" 2>/dev/null | grep -c '\.json$') rejected" ;;
+      forget) security delete-generic-password -s jester-hub >/dev/null 2>&1; rm -f "$CONF/hub.json"; echo "hub config removed" ;;
+      *) echo "usage: jester hub setup <url>|status|forget"; exit 1 ;;
+    esac ;;
+  voice)
+    v="${2:-status}"
+    case "$v" in
+      off|away|always)
+        mkdir -p "$CONF"; python3 -c 'import json,sys,os;p=sys.argv[1];d=json.load(open(p)) if os.path.exists(p) else {};d["voice"]=sys.argv[2];json.dump(d,open(p,"w"),indent=1)' "$CONF/config.json" "$v"
+        echo "voice -> $v (away = only when you're not at the keyboard; always = also reads Ask replies; silent 23:00-07:00)" ;;
+      test) mkdir -p "$CACHE"; touch "$CACHE/voice-test"; echo "Jester should speak within a second or two" ;;
+      status) echo "voice: $(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("voice","away"))' "$CONF/config.json" 2>/dev/null || echo away)" ;;
+      *) echo "usage: jester voice off|away|always|test|status"; exit 1 ;;
+    esac ;;
+  on)  rm -f "$CACHE/disabled"; launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null || launchctl kickstart "gui/$(id -u)/$LABEL"; echo "jester: on" ;;
+  off) mkdir -p "$CACHE"; touch "$CACHE/disabled"; launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null; echo "jester: off (hooks are no-ops until 'on')" ;;
+  status)
+    if launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
+      echo "agent: $(launchctl print "gui/$(id -u)/$LABEL" | awk '/^\tstate =/{print $3} /^\tpid =/{print "pid " $3}' | paste -sd' ' -)"
+    else echo "agent: not loaded"; fi
+    [ -f "$CACHE/disabled" ] && echo "hooks: disabled" || echo "hooks: enabled"
+    echo "bot: $(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("bot","jester"))' "$CONF/config.json" 2>/dev/null || echo jester)"
+    n=$(ls "$CACHE/sessions" 2>/dev/null | grep -c '\.json$'); echo "sessions tracked: $n"
+    for f in "$CACHE"/sessions/*.json; do [ -f "$f" ] && python3 -c 'import json,sys,time;d=json.load(open(sys.argv[1]));print("  %-24s %-9s %4ds ago  %s"%(d.get("project","?")[:24],d.get("state"),time.time()-d.get("ts",0),d.get("detail","")))' "$f"; done ;;
+  bot)
+    [ -z "${2:-}" ] && { echo "usage: jester bot <name>"; exit 1; }
+    mkdir -p "$CONF"; python3 -c 'import json,sys,os;p=sys.argv[1];d=json.load(open(p)) if os.path.exists(p) else {};d["bot"]=sys.argv[2];json.dump(d,open(p,"w"),indent=1)' "$CONF/config.json" "$2"; echo "bot -> $2" ;;
+  bots) ls "$CONF/bots" 2>/dev/null; ls "$HOME/.local/share/jester/Jester.app/Contents/Resources/bots" ;;
+  forget) rm -rf "$CACHE/sessions" "$CACHE/projects"; echo "forgot sessions, summaries and parked work" ;;
+  demo)
+    # fake session walking through every state (proof without a real Claude run)
+    H="$HOME/.local/bin/jester-hook"; S="demo-$$"; C="$HOME/demo-project"
+    j(){ printf '{"session_id":"%s","cwd":"%s"%s}' "$S" "$C" "$1"; }
+    step(){ echo "→ $1"; j "$2" | "$H" "$1"; sleep "${3:-3}"; }
+    step SessionStart ''
+    step UserPromptSubmit ',"prompt":"add retry to the kafka consumer"'
+    step PreToolUse ',"tool_name":"Bash","tool_input":{"command":"npm test --watch=false"}'
+    step PreToolUse ',"tool_name":"Edit","tool_input":{"file_path":"/x/consumer.ts"}'
+    step Notification ',"notification_type":"permission_prompt","message":"Claude needs your permission"'
+    step PostToolUseFailure ',"tool_name":"Bash"'
+    step Stop ',"last_assistant_message":"Added retry with backoff."' 6
+    step SessionEnd ',"reason":"exit"' 1
+    rm -f "$CACHE/sessions/$S.json"; echo "demo done" ;;
+  *) echo "usage: jester on|off|status|add <text>|hub setup|status|bot <name>|bots|forget|demo|voice off|away|always|test"; exit 1 ;;
+esac

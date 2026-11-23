@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- urgent reminders open a full-screen alarm (Android 14+: user grants it in the setup checklist) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <queries>
+        <!-- Jester's voice: Android 11+ must see the TTS engine to bind to it -->
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+        <intent><action android:name="android.speech.RecognitionService" /></intent>
+        <intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>
+    </queries>
+
+    <application
+        android:name=".JesterApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@drawable/ic_robot"
+        android:roundIcon="@drawable/ic_robot"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Jester">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Chat sheet (tap) and menu (long-press): translucent, keyboard up immediately -->
+        <activity
+            android:name=".ui.SheetActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="io.github.tupesanket1999.jester.sheet"
+            android:theme="@style/Theme.Jester.Sheet"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize" />
+
+        <!-- Full-screen urgent alarm (also over the lock screen) -->
+        <activity
+            android:name=".ui.AlarmActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:taskAffinity="io.github.tupesanket1999.jester.alarm" />
+
+        <!-- jester:// links: QR pairing, routines, shortcuts (validated + one-tap confirm) -->
+        <activity
+            android:name=".ui.LinkActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="io.github.tupesanket1999.jester.link"
+            android:theme="@style/Theme.Jester.Sheet">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="jester" />
+            </intent-filter>
+        </activity>
+
+        <!-- Long-press the floating Jester: speech recognizer, then chat -->
+        <activity
+            android:name=".ui.VoiceActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity="io.github.tupesanket1999.jester.voice"
+            android:theme="@style/Theme.Jester.Invisible" />
+
+        <!-- camera button: the photo goes to our cache only, read on-device, then deleted -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Share -> Jester -->
+        <activity
+            android:name=".ui.ShareActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/share_label"
+            android:theme="@style/Theme.Jester.Invisible">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".service.RobotService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Always-on floating assistant: keeps the on-screen robot overlay and the reminder push connection alive" />
+        </service>
+
+        <receiver android:name=".reminders.AlarmReceiver" android:exported="false" />
+        <receiver android:name=".notify.ActionReceiver" android:exported="false" />
+        <receiver android:name=".service.SystemReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

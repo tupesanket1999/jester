@@ -1,0 +1,146 @@
+# pixel robot: original pixel art, 24x28 canvas.
+# palette: <char> <r> <g> <b>   ('.' = transparent / keep what is underneath)
+@palette
+K 18 11 13
+C 230 57 70
+R 255 77 94
+D 150 30 42
+B 242 167 160
+A 224 165 92
+Y 255 214 120
+V 40 22 26
+W 255 236 232
+S 150 205 255
+G 120 230 190
+
+# @layer <name> <x> <y>   then rows
+@layer body 0 0
+...........AA...........
+...........KK...........
+..........KCCK..........
+....KKKKKKKKKKKKKKKK....
+...KRRRRRRRRRRRRRRCCK...
+...KRCCCCCCCCCCCCCCDK...
+...KCKKKKKKKKKKKKKKDK...
+...KCKVVVVVVVVVVVVKDK...
+...KCKVVVVVVVVVVVVKDK...
+...KCKVVVVVVVVVVVVKDK...
+...KCKVVVVVVVVVVVVKDK...
+...KCKKKKKKKKKKKKKKDK...
+...KCBBCCCCCCCCCBBCDK...
+....KDDDDDDDDDDDDDDK....
+......KKKKKKKKKKKK......
+.....KCCCCCCCCCCCCK.....
+.....KCRRCCCCCCCCDK.....
+.....KCRCCCKKCCCCDK.....
+.....KCCCCKAAKCCCDK.....
+.....KCCCCCKKCCCCDK.....
+.....KDDDDDDDDDDDDK.....
+......KKKKKKKKKKKK......
+........KDDDDDDK........
+.........KKKKKK.........
+
+@layer tip_on 11 0
+RR
+
+@layer eyes_open 6 7
+VVVVVVVVVVVV
+VWWVVVVVVWWV
+VWWVVVVVVWWV
+VVVVVVVVVVVV
+
+@layer eyes_blink 6 7
+VVVVVVVVVVVV
+VVVVVVVVVVVV
+VWWVVVVVVWWV
+VVVVVVVVVVVV
+
+@layer eyes_happy 6 7
+VVVVVVVVVVVV
+VVWVVVVVVWVV
+VWVWVVVVWVWV
+VVVVVVVVVVVV
+
+@layer eyes_up 6 7
+VVWWVVVVVVWW
+VVWWVVVVVVWW
+VVVVVVVVVVVV
+VVVVVVVVVVVV
+
+@layer eyes_focus 6 7
+VVVVVVVVVVVV
+VVVVVVVVVVVV
+VGGVVVVVVGGV
+VGGVVVVVVGGV
+
+@layer eyes_alert 6 7
+VWWVVVVVVWWV
+VWWVVVVVVWWV
+VWWVVVVVVWWV
+VVVVVVVVVVVV
+
+@layer eyes_sleep 6 7
+VVVVVVVVVVVV
+VVVVVVVVVVVV
+VWWWVVVVWWWV
+VVVVVVVVVVVV
+
+@layer eyes_x 6 7
+VVVVVVVVVVVV
+VWVWVVVVWVWV
+VVWVVVVVVWVV
+VWVWVVVVWVWV
+
+@layer arm_l 2 16
+.KK
+KCK
+KCK
+KBK
+.K.
+
+@layer arm_r 19 16
+KK.
+KCK
+KCK
+KBK
+.K.
+
+@layer arm_r_up 19 8
+...K.
+..KBK
+..KBK
+..KCK
+..KCK
+..KCK
+..KCK
+..KCK
+KCCCK
+KKKK.
+
+@layer arm_r_thumb 19 13
+...K.
+..KBK
+.KBBK
+KCBBK
+KKKK.
+
+@layer flame_s 9 24
+.RAAR.
+..RR..
+
+@layer flame_m 9 24
+RAYYAR
+.RAAR.
+..RR..
+
+@layer flame_l 9 24
+RAYYAR
+RAYYAR
+.RAAR.
+..RR..
+...R..
+
+@layer sweat 21 3
+.S
+SS
+SS
