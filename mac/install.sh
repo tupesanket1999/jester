@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build + install the Jester mascot. Does NOT touch ~/.claude/settings.json (hooks are added separately, see README).
+# Build + install the Jester mascot. Touches Claude Code settings only if you say yes (via `jester hooks install`).
 set -euo pipefail
 cd "$(dirname "$0")"
 PACKS="$PWD/../packs"
@@ -54,4 +54,10 @@ launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 rm -f "$HOME/.cache/jester/disabled"
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 echo "✓ installed: $APP, $BIN/jester-hook, $BIN/jester"
-echo "Next: add the Claude Code hooks (see README.md, section Hooks)."
+if [ -t 0 ]; then
+  read -r -p "Add Jester's hooks to your Claude Code settings now? [Y/n] " yn
+  case "${yn:-y}" in [Yy]*) "$BIN/jester" hooks install ;; *) echo "Later: jester hooks install" ;; esac
+else
+  echo "Next: jester hooks install   (adds the Claude Code hooks; see README.md, section Hooks)"
+fi
+echo "Try it: jester demo"

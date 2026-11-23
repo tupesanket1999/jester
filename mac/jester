@@ -1,5 +1,5 @@
 #!/bin/bash
-# jester: control the Jester mascot. on|off|status|bot <name>|bots|forget|demo|voice|add|hub
+# jester: control the Jester mascot. on|off|status|hooks|bot <name>|bots|forget|demo|voice|add|hub
 set -uo pipefail
 LABEL="io.github.tupesanket1999.jester"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
@@ -28,6 +28,62 @@ case "${1:-status}" in
       forget) security delete-generic-password -s jester-hub >/dev/null 2>&1; rm -f "$CONF/hub.json"; echo "hub config removed" ;;
       *) echo "usage: jester hub setup <url>|status|forget"; exit 1 ;;
     esac ;;
+  hooks)
+    # Add/remove Jester's Claude Code hooks in settings.json (respects CLAUDE_CONFIG_DIR). Appends, never replaces;
+    # backs the file up first; running install twice is a no-op.
+    action="${2:-status}"
+    case "$action" in install|uninstall|status) ;; *) echo "usage: jester hooks install|uninstall|status"; exit 1 ;; esac
+    SETTINGS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+    python3 - "$action" "$SETTINGS" "$HOME/.local/bin/jester-hook" <<'PY'
+import json, os, shutil, sys, time
+action, path, hook = sys.argv[1], sys.argv[2], sys.argv[3]
+PLAIN = ["SessionStart", "UserPromptSubmit", "Notification", "Stop", "SessionEnd"]
+TOOL = ["PreToolUse", "PostToolUse", "PostToolUseFailure"]
+def ours(h): return isinstance(h, dict) and "/jester-hook " in str(h.get("command", ""))
+try:
+    data = json.load(open(path)) if os.path.exists(path) else {}
+except ValueError as e:
+    sys.exit(f"✗ {path} is not valid JSON ({e}); fix it first, nothing changed")
+hooks = data.get("hooks", {}) if isinstance(data.get("hooks"), dict) else {}
+present = [ev for ev in PLAIN + TOOL if any(ours(h) for g in hooks.get(ev, []) for h in g.get("hooks", []))]
+if action == "status":
+    print(f"settings: {path}")
+    print(f"jester hooks: {len(present)}/{len(PLAIN + TOOL)} events" + ("" if present else " (run: jester hooks install)"))
+    sys.exit(0)
+changed = False
+if action == "install":
+    if not os.path.exists(hook): print(f"! {hook} not found yet; run ./install.sh first (adding hooks anyway)")
+    for ev in PLAIN + TOOL:
+        if ev in present: continue
+        group = {"hooks": [{"type": "command", "command": f"{hook} {ev}", "timeout": 3}]}
+        if ev in TOOL: group["matcher"] = "*"
+        hooks.setdefault(ev, []).append(group); changed = True
+else:
+    for ev in list(hooks):
+        groups = []
+        for g in hooks[ev]:
+            kept = [h for h in g.get("hooks", []) if not ours(h)]
+            if len(kept) != len(g.get("hooks", [])): changed = True
+            if kept: groups.append({**g, "hooks": kept})
+        if groups: hooks[ev] = groups
+        else: del hooks[ev]
+if not changed:
+    print("✓ nothing to change (" + ("already installed" if action == "install" else "no jester hooks found") + f") in {path}")
+    sys.exit(0)
+if os.path.exists(path):
+    backup, n = f"{path}.bak-{time.strftime('%Y%m%d-%H%M%S')}", 1
+    while os.path.exists(backup): backup, n = f"{path}.bak-{time.strftime('%Y%m%d-%H%M%S')}-{n}", n + 1
+    shutil.copy2(path, backup); print(f"• backup: {backup}")
+os.makedirs(os.path.dirname(path), exist_ok=True)
+data["hooks"] = hooks
+if not hooks: data.pop("hooks")
+tmp = path + ".jester-tmp"
+with open(tmp, "w") as f: json.dump(data, f, indent=2); f.write("\n")
+os.replace(tmp, path)
+print(("✓ added Jester hooks for " + str(len(PLAIN + TOOL) - len(present)) + " events" if action == "install"
+       else "✓ removed Jester hooks") + f" in {path}. New Claude Code sessions pick this up.")
+PY
+    ;;
   voice)
     v="${2:-status}"
     case "$v" in
@@ -67,5 +123,5 @@ case "${1:-status}" in
     step Stop ',"last_assistant_message":"Added retry with backoff."' 6
     step SessionEnd ',"reason":"exit"' 1
     rm -f "$CACHE/sessions/$S.json"; echo "demo done" ;;
-  *) echo "usage: jester on|off|status|add <text>|hub setup|status|bot <name>|bots|forget|demo|voice off|away|always|test"; exit 1 ;;
+  *) echo "usage: jester on|off|status|hooks install|uninstall|status|add <text>|hub setup|status|bot <name>|bots|forget|demo|voice off|away|always|test"; exit 1 ;;
 esac

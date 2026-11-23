@@ -69,8 +69,8 @@ git clone https://github.com/tupesanket1999/jester
 cd jester/mac && ./install.sh
 ```
 
-Then add the Claude Code hooks (one block in `~/.claude/settings.json`, shown in [mac/README.md](mac/README.md#hooks))
-and run `jester demo` to watch him walk through every state.
+It asks to add the Claude Code hooks for you (or run `jester hooks install` later; [details](mac/README.md#hooks)).
+Then run `jester demo` to watch him walk through every state.
 
 ### Android
 1. Download the latest `jester-android-*.apk` from [Releases](https://github.com/tupesanket1999/jester/releases/latest).
@@ -110,7 +110,6 @@ on Android.
 
 ## Roadmap
 - Android eco mode and a lower idle frame rate
-- `jester hooks install` to set up Claude Code hooks in one command
 - Prebuilt, notarized Mac app
 - Linux (X11) port
 - Gallery of community mascots

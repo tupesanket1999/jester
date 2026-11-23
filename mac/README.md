@@ -29,11 +29,22 @@ cd mac
 
 `install.sh` compiles `jester-hook` and `Jester.app` (bundle id `io.github.tupesanket1999.jester`) into
 `~/.local/share/jester`, copies the bot packs from [`../packs`](../packs), links `jester` and `jester-hook` into
-`~/.local/bin` (make sure that is on your `PATH`), and starts a LaunchAgent. It never touches `~/.claude/settings.json`.
+`~/.local/bin` (make sure that is on your `PATH`), and starts a LaunchAgent. At the end it asks whether to add the
+Claude Code hooks for you (`jester hooks install`); say no and nothing in your Claude settings changes.
 
 ## Hooks
 
-Add the hooks to `~/.claude/settings.json`, **appending** to any existing arrays:
+One command adds them:
+
+```bash
+jester hooks install     # also: jester hooks status | jester hooks uninstall
+```
+
+It edits `settings.json` in `$CLAUDE_CONFIG_DIR` (default `~/.claude`), **appends** to any hooks you already have,
+backs the file up first (`settings.json.bak-<time>`), and does nothing if Jester's hooks are already there. New Claude
+Code sessions pick the hooks up. Then run `jester demo` to watch a fake session walk through every state.
+
+To add them by hand instead:
 
 | Event | Matcher | Command |
 |---|---|---|
@@ -41,12 +52,12 @@ Add the hooks to `~/.claude/settings.json`, **appending** to any existing arrays
 | PreToolUse, PostToolUse, PostToolUseFailure | `*` | `~/.local/bin/jester-hook <Event>` |
 
 Each entry looks like `{"type": "command", "command": "<your-home>/.local/bin/jester-hook Stop", "timeout": 3}`.
-Use the absolute path of your home directory (hooks do not expand `~` reliably). Then run `jester demo` to watch a fake session walk through every state.
+Use the absolute path of your home directory (hooks do not expand `~` reliably).
 
 ## Use
 
 ```
-jester on | off | status | bot <name> | bots | forget | demo | voice off|away|always|test
+jester on | off | status | hooks install|uninstall|status | bot <name> | bots | forget | demo | voice off|away|always|test
 ```
 
 - `off` stops the app and turns the hooks into no-ops; `on` brings both back.
