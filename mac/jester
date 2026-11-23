@@ -3,6 +3,19 @@
 set -uo pipefail
 LABEL="io.github.tupesanket1999.jester"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+BREW=""
+case "$(readlink "$0" 2>/dev/null)" in *Cellar/jester/*) BREW=1 ;; esac
+if [ -n "$BREW" ]; then
+  # Homebrew install: binaries in $(brew --prefix)/bin, app in opt/jester, agent run by `brew services`
+  LABEL="homebrew.mxcl.jester"; APP_DIR="$HERE/../opt/jester/Jester.app"
+else
+  APP_DIR="$HOME/.local/share/jester/Jester.app"
+fi
+# Stable hook path: next to this script when installed (brew bin or ~/.local/bin), else the install.sh location
+if [ -n "${JESTER_HOOK:-}" ]; then HOOK="$JESTER_HOOK"
+elif [ -x "$HERE/jester-hook" ]; then HOOK="$HERE/jester-hook"
+else HOOK="$HOME/.local/bin/jester-hook"; fi
 CACHE="$HOME/.cache/jester"
 CONF="$HOME/.config/jester"
 case "${1:-status}" in
@@ -34,7 +47,7 @@ case "${1:-status}" in
     action="${2:-status}"
     case "$action" in install|uninstall|status) ;; *) echo "usage: jester hooks install|uninstall|status"; exit 1 ;; esac
     SETTINGS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
-    python3 - "$action" "$SETTINGS" "$HOME/.local/bin/jester-hook" <<'PY'
+    python3 - "$action" "$SETTINGS" "$HOOK" <<'PY'
 import json, os, shutil, sys, time
 action, path, hook = sys.argv[1], sys.argv[2], sys.argv[3]
 PLAIN = ["SessionStart", "UserPromptSubmit", "Notification", "Stop", "SessionEnd"]
@@ -52,7 +65,7 @@ if action == "status":
     sys.exit(0)
 changed = False
 if action == "install":
-    if not os.path.exists(hook): print(f"! {hook} not found yet; run ./install.sh first (adding hooks anyway)")
+    if not os.path.exists(hook): print(f"! {hook} not found yet; install Jester first (adding hooks anyway)")
     for ev in PLAIN + TOOL:
         if ev in present: continue
         group = {"hooks": [{"type": "command", "command": f"{hook} {ev}", "timeout": 3}]}
@@ -94,8 +107,15 @@ PY
       status) echo "voice: $(python3 -c 'import json,sys;print(json.load(open(sys.argv[1])).get("voice","away"))' "$CONF/config.json" 2>/dev/null || echo away)" ;;
       *) echo "usage: jester voice off|away|always|test|status"; exit 1 ;;
     esac ;;
-  on)  rm -f "$CACHE/disabled"; launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null || launchctl kickstart "gui/$(id -u)/$LABEL"; echo "jester: on" ;;
-  off) mkdir -p "$CACHE"; touch "$CACHE/disabled"; launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null; echo "jester: off (hooks are no-ops until 'on')" ;;
+  on)
+    rm -f "$CACHE/disabled"
+    if [ -n "$BREW" ]; then brew services start jester >/dev/null
+    else launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null || launchctl kickstart "gui/$(id -u)/$LABEL"; fi
+    echo "jester: on" ;;
+  off)
+    mkdir -p "$CACHE"; touch "$CACHE/disabled"
+    if [ -n "$BREW" ]; then brew services stop jester >/dev/null 2>&1; else launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null; fi
+    echo "jester: off (hooks are no-ops until 'on')" ;;
   status)
     if launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then
       echo "agent: $(launchctl print "gui/$(id -u)/$LABEL" | awk '/^\tstate =/{print $3} /^\tpid =/{print "pid " $3}' | paste -sd' ' -)"
@@ -107,11 +127,11 @@ PY
   bot)
     [ -z "${2:-}" ] && { echo "usage: jester bot <name>"; exit 1; }
     mkdir -p "$CONF"; python3 -c 'import json,sys,os;p=sys.argv[1];d=json.load(open(p)) if os.path.exists(p) else {};d["bot"]=sys.argv[2];json.dump(d,open(p,"w"),indent=1)' "$CONF/config.json" "$2"; echo "bot -> $2" ;;
-  bots) ls "$CONF/bots" 2>/dev/null; ls "$HOME/.local/share/jester/Jester.app/Contents/Resources/bots" ;;
+  bots) ls "$CONF/bots" 2>/dev/null; ls "$APP_DIR/Contents/Resources/bots" ;;
   forget) rm -rf "$CACHE/sessions" "$CACHE/projects"; echo "forgot sessions, summaries and parked work" ;;
   demo)
     # fake session walking through every state (proof without a real Claude run)
-    H="$HOME/.local/bin/jester-hook"; S="demo-$$"; C="$HOME/demo-project"
+    H="$HOOK"; S="demo-$$"; C="$HOME/demo-project"
     j(){ printf '{"session_id":"%s","cwd":"%s"%s}' "$S" "$C" "$1"; }
     step(){ echo "→ $1"; j "$2" | "$H" "$1"; sleep "${3:-3}"; }
     step SessionStart ''
