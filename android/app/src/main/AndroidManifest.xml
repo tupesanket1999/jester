@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- urgent reminders open a full-screen alarm (Android 14+: user grants it in the setup checklist) -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- in-app updates: hand the downloaded, verified APK to PackageInstaller (Android still asks the user to confirm) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <queries>
         <!-- Jester's voice: Android 11+ must see the TTS engine to bind to it -->
@@ -78,6 +80,15 @@
             </intent-filter>
         </activity>
 
+        <!-- "Jester x.y.z is available": what's new, Update / Later / Skip -->
+        <activity
+            android:name=".ui.UpdateActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:taskAffinity="io.github.tupesanket1999.jester.update"
+            android:theme="@style/Theme.Jester.Sheet" />
+
         <!-- Long-press the floating Jester: speech recognizer, then chat -->
         <activity
             android:name=".ui.VoiceActivity"
@@ -127,6 +138,7 @@
 
         <receiver android:name=".reminders.AlarmReceiver" android:exported="false" />
         <receiver android:name=".notify.ActionReceiver" android:exported="false" />
+        <receiver android:name=".update.InstallReceiver" android:exported="false" />
         <receiver android:name=".service.SystemReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

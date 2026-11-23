@@ -5,6 +5,7 @@ import io.github.tupesanket1999.jester.queue.WriteQueue
 import io.github.tupesanket1999.jester.reminders.Alarms
 import io.github.tupesanket1999.jester.reminders.ShownLog
 import io.github.tupesanket1999.jester.reminders.TaskLite
+import io.github.tupesanket1999.jester.update.Updater
 import io.github.tupesanket1999.jester.voice.Voice
 import android.app.Application
 import android.content.Context
@@ -59,6 +60,7 @@ class JesterApp : Application() {
         voice = Voice(this, prefs)
         tasks.value = loadCachedTasks()
         Notifier.createChannels(this)
+        scope.launch { runCatching { Updater.cleanup(this@JesterApp) } } // old downloaded APKs
     }
 
     // ---- writes: always through the queue, so nothing typed is lost ----

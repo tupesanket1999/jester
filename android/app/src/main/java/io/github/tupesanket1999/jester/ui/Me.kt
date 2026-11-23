@@ -5,6 +5,8 @@ import io.github.tupesanket1999.jester.bot.BotRepo
 import io.github.tupesanket1999.jester.logic.Looks
 import io.github.tupesanket1999.jester.logic.VoiceMode
 import io.github.tupesanket1999.jester.service.RobotService
+import io.github.tupesanket1999.jester.update.CheckResult
+import io.github.tupesanket1999.jester.update.Updater
 import android.app.TimePickerDialog
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -74,6 +76,8 @@ fun MeScreen(app: JesterApp, onNav: (String) -> Unit) {
     // prefs are plain reads: bumping lookVersion (collected here) recomposes the screen after every change
     @Suppress("UNUSED_VARIABLE") val v = app.lookVersion.collectAsState().value
     fun bump() { app.lookVersion.value++ }
+    var checking by remember { mutableStateOf(false) }
+    var updMsg by remember { mutableStateOf("") }
 
     Column(Modifier.fillMaxSize().background(j.bg).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -208,6 +212,35 @@ fun MeScreen(app: JesterApp, onNav: (String) -> Unit) {
             }
             Text("Jester can add, tick and snooze your own items and chat. It has no way to start work on the Mac.",
                 color = j.muted2, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
+        }
+
+        // updates
+        Column(Modifier.rise(460), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Label("UPDATES", Modifier.padding(horizontal = 4.dp))
+            Card {
+                Column {
+                    SwitchRow("Check for updates automatically", "Once a day, from GitHub. Nothing about you is sent", p.autoUpdateCheck) {
+                        p.autoUpdateCheck = it; bump()
+                        if (it) Updater.autoCheck(app)
+                    }
+                    HorizontalDivider(color = j.hair)
+                    ValueRow("Check for updates", if (checking) "Checking…" else "v${Updater.installedVersion(ctx)}") {
+                        if (!checking) {
+                            checking = true; updMsg = ""
+                            scope.launch {
+                                val r = withContext(Dispatchers.IO) { Updater.check(app, auto = false) }
+                                checking = false
+                                when (r) {
+                                    is CheckResult.UpToDate -> updMsg = "You're up to date (${r.version})"
+                                    is CheckResult.Available -> UpdateActivity.open(ctx)
+                                    CheckResult.Failed -> updMsg = "Couldn't check right now. Try again later."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (updMsg.isNotEmpty()) Text(updMsg, color = j.muted, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
         }
     }
 }
