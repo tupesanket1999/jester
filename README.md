@@ -15,7 +15,7 @@ so you can go get coffee and still know the moment to come back.
 ![macOS 13+](https://img.shields.io/badge/macOS-13%2B-555)
 ![Android 8+](https://img.shields.io/badge/Android-8%2B-3ddc84)
 
-[**Install on Mac**](#mac) · [**Download for Android**](https://github.com/tupesanket1999/jester/releases/latest) · [Features](#features) · [FAQ](#faq)
+[**Install on Mac**](#mac) · [**Download for Android**](https://github.com/tupesanket1999/jester/releases) · [Features](#features) · [FAQ](#faq)
 
 </div>
 
@@ -62,18 +62,20 @@ tells you, with a pose and a little sound, exactly when you're needed. Click him
 ## Install
 
 ### Mac
-Needs macOS 13+, the Xcode command-line tools (`xcode-select --install`) and [Claude Code](https://claude.com/claude-code).
+Needs macOS 13+ and [Claude Code](https://claude.com/claude-code).
 
 ```bash
-git clone https://github.com/tupesanket1999/jester
-cd jester/mac && ./install.sh
+brew install tupesanket1999/tap/jester
+brew services start jester
+jester hooks install     # adds the Claude Code hooks (appends to your settings, with a backup)
+jester demo              # watch him walk through every state
 ```
 
-It asks to add the Claude Code hooks for you (or run `jester hooks install` later; [details](mac/README.md#hooks)).
-Then run `jester demo` to watch him walk through every state.
+Homebrew builds it from source in about a minute. Without Homebrew:
+`git clone https://github.com/tupesanket1999/jester && cd jester/mac && ./install.sh` ([details](mac/README.md)).
 
 ### Android
-1. Download the latest `jester-android-*.apk` from [Releases](https://github.com/tupesanket1999/jester/releases/latest).
+1. Download the newest `jester-android-*.apk` from [Releases](https://github.com/tupesanket1999/jester/releases).
 2. Open it and allow installs from your browser or files app.
 3. Follow the setup checklist and grant **Display over other apps**.
 
@@ -110,7 +112,7 @@ on Android.
 
 ## Roadmap
 - Android eco mode and a lower idle frame rate
-- Prebuilt, notarized Mac app
+- Notarized Mac app download and a Homebrew core formula
 - Linux (X11) port
 - Gallery of community mascots
 

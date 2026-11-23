@@ -18,7 +18,17 @@ parked work, bot picker, clear, hide and quit.
 While Claude works, the bot only changes pose (thinking, typing, hand raised, thumbs up, X-eyes). It speaks only when
 something is done or needs you. Set `"show_activity": true` in the config for a chattier bubble.
 
-## Build and install
+## Install
+
+With Homebrew (builds from source, about a minute):
+
+```bash
+brew install tupesanket1999/tap/jester
+brew services start jester
+jester hooks install
+```
+
+## Build and install from source
 
 Requires macOS 13+, the Xcode command-line tools (`swiftc`) and Claude Code. Run from a clone of this repo:
 
