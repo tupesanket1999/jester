@@ -181,7 +181,7 @@ fun MeScreen(app: JesterApp, onNav: (String) -> Unit) {
                 Column {
                     TRIGGERS.forEachIndexed { i, t ->
                         if (i > 0) HorizontalDivider(color = j.hair)
-                        SwitchRow(t.label, t.hint + (t.ships?.let { " · coming in $it" } ?: ""), p.trigger(t.key)) { p.setTrigger(t.key, it); bump() }
+                        SwitchRow(t.label, t.hint + (t.ships?.let { " · coming soon" } ?: ""), p.trigger(t.key)) { p.setTrigger(t.key, it); bump() }
                     }
                 }
             }
@@ -210,7 +210,7 @@ fun MeScreen(app: JesterApp, onNav: (String) -> Unit) {
                     }
                 }
             }
-            Text("Jester can add, tick and snooze your own items and chat. It has no way to start work on the Mac.",
+            Text("Jester can add, tick and snooze your own items and chat.",
                 color = j.muted2, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
         }
 
